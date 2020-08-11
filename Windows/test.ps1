@@ -1,1 +1,1 @@
-echo Hello
+Write-Output Hello
