@@ -1,11 +1,18 @@
 #Requires -RunAsAdministrator
+###############################################################
+# 
+# Get-SysConfig.ps1
+# 
+###############################################################
 
+# variable declaration
 $tmpPath = $PSScriptRoot + "\tmp"
 $isServer = $false
+
+# function declaration
 $functions = {
     # Get OS core configuration
     function funcOsCoreConfiguration() {
-        Write-Output "Getting OS core configuration"
         systeminfo > .\systeminfo.txt
         Get-ComputerInfo > .\Get_ComputerInfo.txt
         Get-WmiObject Win32_OperatingSystem > .\OS_Version.txt
@@ -13,43 +20,38 @@ $functions = {
         (Get-WmiObject Win32_OperatingSystem).Caption >> .\OS_Version.txt
         Get-Service | Format-Table -AutoSize | Out-String -Width 4096 > .\Get_Service.txt
         Get-WMIObject Win32_QuickFixEngineering > .\PatchList.txt
-        Write-Output "Done OS core configuration"
+        Write-Output "Getting OS core configuration Completed"
     }
 
     # Get Disk & Volume configuration
     function funcDiskAndVolumeConfiguration() {    
-        Write-Output "Getting Disk & Volume configuration"
         Get-Volume > .\Get_Volume.txt
         $ErrorActionPreference = "silentlycontinue"
         Get-ChildItem C:\ -Recurse > .\Get_ChildItem_C_drive.txt
         $ErrorActionPreference = "continue"
         Get-WmiObject -Class Win32_OSRecoveryConfiguration > .\MemDump.txt
-        Write-Output "Done Disk & Volume configuration"
+        Write-Output "Getting Disk & Volume configuration Completed"
     }
 
     # Get EventLog
     function funcEventLog() {
-
-        Write-Output "Getting EventLog"
         Get-EventLog Application | Export-CSV -Encoding Default .\Application_evt.csv
         wevtutil epl Application .\Application_evt.evtx
         Get-EventLog System | Export-CSV -Encoding Default .\System_evt.csv
         wevtutil epl System .\System_evt.evtx
-        Write-Output "Done EventLog"
+        Write-Output "Getting EventLog Completed"
     }
 
     # Get user & group configuration
     function funcUserAndGroupConfiguration() {
-        Write-Output "Getting user & group configuration"
         Get-LocalUser > .\Get_LocalUser.txt
         Get-LocalGroup > .\Get_LocalGroup.txt
-        Write-Output "Done user & group configuration"
+        Write-Output "Getting user & group configuration Completed"
     }
 
 
     # Get localpolicy
     function funcLocalpolicy() {
-        Write-Output "Getting localpolicy"
         if ($isServer) {
             gpresult /H .\gpresult.html
         }
@@ -57,13 +59,12 @@ $functions = {
             gpresult /Z > .\gpresult.txt
         }
         secedit /export /cfg .\secedit.log
-        Write-Output "Done localpolicy"
+        Write-Output "Getting localpolicy Completed"
     }
 
 
     # Get network configuration
     function funcNetworkConfiguration() {
-        Write-Output "Getting network configuration"
         ipconfig /all > .\ipconfig.txt
         route print > .\route_print.txt
         Get-ChildItem -LiteralPath 'HKLM:\SYSTEM\CurrentControlSet\Services\W32Time' -Recurse > .\Registry_W32Time.txt
@@ -81,7 +82,7 @@ $functions = {
         Set-Location $hostsPath
         Copy-Item C:\Windows\System32\drivers\etc\* .
         Set-Location $tmpPath
-        Write-Output "Done network configuration"
+        Write-Output "Getting network configuration Completed"
     }
 
     # Get network configuration
@@ -114,10 +115,11 @@ Write-Output "###############################################################"
 If ((Get-WmiObject Win32_OperatingSystem).Caption.Contains("Server")) {
     $isServer = $true 
 }
+Write-Output "isServer: $isServer"
 
 if (!(Test-Path $tmpPath)) {
     mkdir $tmpPath
-    #Write-Output "ディレクトリを作成しました：" + $tmpPath
+    Write-Output "一時ディレクトリを作成しました：$tmpPath"
 }
 Set-Location $tmpPath | Out-Null
 
@@ -130,20 +132,44 @@ Write-Output "###############################################################"
 Write-Output "Start job OsCoreConfiguration"
 Start-Job -InitializationScript $functions -ScriptBlock {
     Set-Location $using:tmpPath
-    funcOsCoreConfiguration
-    funcEventLog
-    funcUserAndGroupConfiguration
-    funcLocalpolicy
-    funcNetworkConfiguration
-    funcWindowsFeature
+    funcOsCoreConfiguration 
 } | Out-Null  
 
+Write-Output "Start job EventLog"
+Start-Job -InitializationScript $functions -ScriptBlock {
+    Set-Location $using:tmpPath
+    funcEventLog
+} | Out-Null
+
+Write-Output "Start job UserAndGroupConfiguration"
+Start-Job -InitializationScript $functions -ScriptBlock {
+    Set-Location $using:tmpPath
+    funcUserAndGroupConfiguration
+} | Out-Null
+
+Write-Output "Start job Localpolicy"
+Start-Job -InitializationScript $functions -ScriptBlock {
+    Set-Location $using:tmpPath
+    funcLocalpolicy
+} | Out-Null
+
+Write-Output "Start job NetworkConfiguration"
+Start-Job -InitializationScript $functions -ScriptBlock {
+    Set-Location $using:tmpPath
+    funcNetworkConfiguration
+} | Out-Null
+
+Write-Output "Start job WindowsFeature"
+Start-Job -InitializationScript $functions -ScriptBlock {
+    Set-Location $using:tmpPath
+    funcWindowsFeature
+} | Out-Null
+
+Write-Output "Start job DiskAndVolumeConfiguration"
 Start-Job -InitializationScript $functions -ScriptBlock {
     Set-Location $using:tmpPath
     funcDiskAndVolumeConfiguration
 } | Out-Null
-
-
 
 while ((Get-job -State Running).Count -gt 0) {
     Get-Job -State Completed | Receive-Job
