@@ -52,19 +52,24 @@ $functions = {
 
     # Get localpolicy
     function funcLocalpolicy() {
+        Param(
+            [parameter(Mandatory = $true)][Boolean]$isServer
+        )
         if ($isServer) {
-            gpresult /H .\gpresult.html
+            gpresult /H .\gpresult.html | Out-Null
         }
         else {
-            gpresult /Z > .\gpresult.txt
+            gpresult /Z > .\gpresult.txt | Out-Null
         }
-        secedit /export /cfg .\secedit.log
+        secedit /export /cfg .\secedit.log | Out-Null
         Write-Output "Getting localpolicy Completed"
     }
 
-
     # Get network configuration
     function funcNetworkConfiguration() {
+        Param(
+            [parameter(mandatory = $true)][String]$tmpPath
+        )
         ipconfig /all > .\ipconfig.txt
         route print > .\route_print.txt
         Get-ChildItem -LiteralPath 'HKLM:\SYSTEM\CurrentControlSet\Services\W32Time' -Recurse > .\Registry_W32Time.txt
@@ -77,17 +82,18 @@ $functions = {
         # get hosts files
         $hostsPath = $tmpPath + "\hosts"
         if (!(Test-Path $hostsPath)) {
-            mkdir $hostsPath
+            mkdir $hostsPath | Out-Null
         }
-        Set-Location $hostsPath
+        Set-Location $hostsPath | Out-Null
         Copy-Item C:\Windows\System32\drivers\etc\* .
-        Set-Location $tmpPath
         Write-Output "Getting network configuration Completed"
     }
 
     # Get network configuration
     function funcWindowsFeature() {
-        
+        Param(
+            [parameter(Mandatory = $true)][Boolean]$isServer
+        )
         if ($isServer) {
             Get-WindowsFeature > .\Get_WindowsFeature.txt
         }
@@ -110,16 +116,16 @@ Write-Output ""
 Write-Output "Start Get-SysConfig"
 Write-Output ""
 Write-Output "###############################################################"
-# initial proccess
 
+# initial proccess
 If ((Get-WmiObject Win32_OperatingSystem).Caption.Contains("Server")) {
     $isServer = $true 
 }
 Write-Output "isServer: $isServer"
 
 if (!(Test-Path $tmpPath)) {
-    mkdir $tmpPath
-    Write-Output "一時ディレクトリを作成しました：$tmpPath"
+    mkdir $tmpPath | Out-Null
+    Write-Output "makedir�F$tmpPath"
 }
 Set-Location $tmpPath | Out-Null
 
@@ -128,6 +134,12 @@ Write-Output ""
 Write-Output "Start to get Windows OS common configuration"
 Write-Output ""
 Write-Output "###############################################################"
+
+Write-Output "Start job DiskAndVolumeConfiguration"
+Start-Job -InitializationScript $functions -ScriptBlock {
+    Set-Location $using:tmpPath
+    funcDiskAndVolumeConfiguration
+} | Out-Null
 
 Write-Output "Start job OsCoreConfiguration"
 Start-Job -InitializationScript $functions -ScriptBlock {
@@ -150,27 +162,22 @@ Start-Job -InitializationScript $functions -ScriptBlock {
 Write-Output "Start job Localpolicy"
 Start-Job -InitializationScript $functions -ScriptBlock {
     Set-Location $using:tmpPath
-    funcLocalpolicy
+    funcLocalpolicy $using:isServer
 } | Out-Null
 
 Write-Output "Start job NetworkConfiguration"
 Start-Job -InitializationScript $functions -ScriptBlock {
     Set-Location $using:tmpPath
-    funcNetworkConfiguration
+    funcNetworkConfiguration $using:tmpPath
 } | Out-Null
 
 Write-Output "Start job WindowsFeature"
 Start-Job -InitializationScript $functions -ScriptBlock {
     Set-Location $using:tmpPath
-    funcWindowsFeature
+    funcWindowsFeature $using:isServer
 } | Out-Null
 
-Write-Output "Start job DiskAndVolumeConfiguration"
-Start-Job -InitializationScript $functions -ScriptBlock {
-    Set-Location $using:tmpPath
-    funcDiskAndVolumeConfiguration
-} | Out-Null
-
+# Job Monitoring
 while ((Get-job -State Running).Count -gt 0) {
     Get-Job -State Completed | Receive-Job
     Start-Sleep 1
