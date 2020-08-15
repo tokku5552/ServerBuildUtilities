@@ -20,6 +20,7 @@ $functions = {
         (Get-WmiObject Win32_OperatingSystem).Caption >> .\OS_Version.txt
         Get-Service | Format-Table -AutoSize | Out-String -Width 4096 > .\Get_Service.txt
         Get-WMIObject Win32_QuickFixEngineering > .\PatchList.txt
+        Get-WmiObject -Class Win32_OSRecoveryConfiguration > .\MemDump.txt
         Write-Output "Getting OS core configuration Completed"
     }
 
@@ -29,10 +30,28 @@ $functions = {
         $ErrorActionPreference = "silentlycontinue"
         Get-ChildItem C:\ -Recurse > .\Get_ChildItem_C_drive.txt
         $ErrorActionPreference = "continue"
-        Get-WmiObject -Class Win32_OSRecoveryConfiguration > .\MemDump.txt
         Write-Output "Getting Disk & Volume configuration Completed"
     }
 
+    # Get Volume configuration
+    function funcVolumeConfiguration() {    
+        Get-Volume > .\Get_Volume.txt
+        Write-Output "Getting Volume configuration Completed"
+    }
+
+    # Get Drive file list
+    function funcDriveConfiguration() {
+        Param(
+            [parameter(Mandatory = $true)][String]$drive
+        )    
+        $path = $drive + ":\"
+        $outPath = ".\Get_ChildItem_" + $drive + "_drive.txt"
+        $ErrorActionPreference = "silentlycontinue"
+        Get-ChildItem $path -Recurse > $outPath
+        $ErrorActionPreference = "continue"
+        $outMsg = "Getting " + $drive + "configuration completed"
+        Write-Output $outMsg
+    }
     # Get EventLog
     function funcEventLog() {
         Get-EventLog Application | Export-CSV -Encoding Default .\Application_evt.csv
@@ -135,10 +154,23 @@ Write-Output "Start to get Windows OS common configuration"
 Write-Output ""
 Write-Output "###############################################################"
 
-Write-Output "Start job DiskAndVolumeConfiguration"
+# get each drive infomation
+(Get-Volume | Where-Object { $_.DriveLetter -match "^[A-Z]" } ).DriveLetter | ForEach-Object {
+    $outMsg = "Start job " + $_ + " drive List"
+    Write-Output $outMsg
+    Start-Job -InitializationScript $functions -ScriptBlock {
+        Param(
+            $drive
+        )
+        Set-Location $using:tmpPath
+        funcDriveConfiguration $drive
+    } -ArgumentList $_ | Out-Null    
+}
+
+Write-Output "Start job Volume Configuration"
 Start-Job -InitializationScript $functions -ScriptBlock {
     Set-Location $using:tmpPath
-    funcDiskAndVolumeConfiguration
+    funcVolumeConfiguration
 } | Out-Null
 
 Write-Output "Start job OsCoreConfiguration"
