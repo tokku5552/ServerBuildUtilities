@@ -257,7 +257,7 @@ Wait-Job $jobRename | Receive-Job
 Write-Output "End job FolderRename"
 Write-Output "Start zip archive compress"
 $basePath = $PSScriptRoot + "\" + $afterDirName
-$destinationPath = $PSScriptRoot + "/" + $afterDirName + ".zip"
+$destinationPath = $PSScriptRoot + "\" + $afterDirName + ".zip"
 Compress-Archive -Path $basePath -DestinationPath $destinationPath
 Remove-Item $basePath -Recurse
 Write-Output "End zip archive compress"
@@ -266,6 +266,6 @@ Write-Output "zip file:" + $destinationPath
 Write-Output ""
 Write-Output "###############################################################"
 Write-Output ""
-Write-Output "End to get Windows OS common configuration"
+Write-Output "End Get-SysConfig"
 Write-Output ""
 Write-Output "###############################################################"
