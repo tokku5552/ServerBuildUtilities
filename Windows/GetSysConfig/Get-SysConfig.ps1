@@ -262,7 +262,7 @@ Compress-Archive -Path $basePath -DestinationPath $destinationPath
 Remove-Item $basePath -Recurse
 Write-Output "End zip archive compress"
 Write-Output ""
-Write-Output "zip file:"+$destinationPath
+Write-Output "zip file:" + $destinationPath
 Write-Output ""
 Write-Output "###############################################################"
 Write-Output ""
