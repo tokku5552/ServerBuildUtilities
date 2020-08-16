@@ -81,7 +81,7 @@ $functions = {
             gpresult /Z > .\gpresult.txt | Out-Null
         }
         secedit /export /cfg .\secedit.log | Out-Null
-        Write-Output "Getting localpolicy Completed"
+        Write-Output "Getting Localpolicy Completed"
     }
 
     # Get network configuration
@@ -120,6 +120,28 @@ $functions = {
             Get-WindowsOptionalFeature -Online > .\Get_WindowsOptionalFeature.txt
         }
         Write-Output "Getting WindowsFeature Competed"
+    }
+
+    function funcFolderRename() {
+        Param(
+            [parameter(Mandatory = $true)][String]$targetPath,
+            [parameter(Mandatory = $true)][String]$targetDirName,
+            [parameter(Mandatory = $true)][String]$afterDirName
+        )
+        if (Test-Path $targetPath) {
+            Set-Location $targetPath
+            Set-Location ..
+            if ((Test-Path $targetDirName) -and !(Test-Path $afterDirName)) {
+                Rename-Item $targetDirName $afterDirName
+            }
+            else {
+                Write-Output "$targetDirName is notexist or $afterDirName is already exist"
+            }
+        }
+        else {
+            Write-Output "$targetPath is notexist"
+        }
+
     }
 
 }
@@ -217,6 +239,31 @@ while ((Get-job -State Running).Count -gt 0) {
 
 Get-Job | Wait-Job | Receive-Job
 
+Write-Output "###############################################################"
+Write-Output ""
+Write-Output "End to get Windows OS common configuration"
+Write-Output ""
+Write-Output "###############################################################"
+
+# zip archive prossecc
+$afterDirName = (hostname) + "_" + (Get-Date -Format "yyyyMMdd_HHmmss")
+
+Write-Output "Start job FolderRename"
+$jobRename = Start-Job -InitializationScript $functions -ScriptBlock {
+    funcFolderRename $using:tmpPath "tmp" $using:afterDirName
+} 
+
+Wait-Job $jobRename | Receive-Job
+Write-Output "End job FolderRename"
+Write-Output "Start zip archive compress"
+$basePath = $PSScriptRoot + "\" + $afterDirName
+$destinationPath = $PSScriptRoot + "/" + $afterDirName + ".zip"
+Compress-Archive -Path $basePath -DestinationPath $destinationPath
+Remove-Item $basePath -Recurse
+Write-Output "End zip archive compress"
+Write-Output ""
+Write-Output "zip file:"+$destinationPath
+Write-Output ""
 Write-Output "###############################################################"
 Write-Output ""
 Write-Output "End to get Windows OS common configuration"
