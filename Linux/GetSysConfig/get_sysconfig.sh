@@ -8,6 +8,11 @@
 # variable declaration
 tmpdir=/tmp/data
 
+# make tmpdir
+if [ ! -e ${tmpdir} ]; then
+    mkdir -p ${tmpdir}
+fi
+
 cat /proc/cpuinfo > ${tmpdir}/cpuinfo.txt
 cat /proc/meminfo  > ${tmpdir}/meminfo.txt
 lspci > ${tmpdir}/lspci.txt
@@ -27,3 +32,10 @@ lsof > ${tmpdir}/lsof.txt
 uname > ${tmpdir}/uname.txt
 vgdisplay > ${tmpdir}/vgdisplay.txt
 lvdisplay  > ${tmpdir}/lvdisplay.txt
+
+# etc copy
+tmpdir_etc=${tmpdir}/etc
+if [ ! -e ${tmpdir_etc} ]; then
+    mkdir -p ${tmpdir_etc}
+fi
+cp -pr /etc/* ${tmpdir_etc}
