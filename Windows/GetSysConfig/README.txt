@@ -2,7 +2,7 @@
 # 
 # Get-SysConfig.ps1
 #
-# Version : 0.1.0
+# Version : 1.0.0
 #                                          Copyright (c) 2020 tokku5552
 #                     https://github.com/tokku5552/ServerBuildUtilities
 #
@@ -10,84 +10,84 @@
 
 # Overview
 
-Windows��OS�ݒ���擾�c�[���B
+WindowsのOS設定情報取得ツール。
 
 # Description
 
-Windows 10 ����� Windows Server 2016�̈ȉ��̐ݒ��񂪎擾�ł��܂��B
-�Ehosts�i�f�B���N�g���j
-  C:\Windows\System32\drivers\etc\ �Ɋi�[����Ă���t�@�C�����擾���܂��B
+Windows 10 および Windows Server 2016の以下の設定情報が取得できます。
+・hosts（ディレクトリ）
+  C:\Windows\System32\drivers\etc\ に格納されているファイルを取得します。
 
-�EOS_Version.txt
-  OS�̃o�[�W���������擾���܂��B
+・OS_Version.txt
+  OSのバージョン情報を取得します。
 
-�Esysteminfo.txt
-  systeminfo�R�}���h�̌��ʂ��擾���܂��B
+・systeminfo.txt
+  systeminfoコマンドの結果を取得します。
 
-�EPatchList.txt
-  �K�p����Ă���p�b�`�̃��X�g���擾���܂��B
+・PatchList.txt
+  適用されているパッチのリストを取得します。
 
-�EApplication_evt.csv
-�EApplication_evt.evtx
-�ESystem_evt.csv
-�ESystem_evt.evtx
-�@Application�ASystem�̃C�x���g���O���擾���܂��B
+・Application_evt.csv
+・Application_evt.evtx
+・System_evt.csv
+・System_evt.evtx
+　Application、Systemのイベントログを取得します。
 
-�EGet_Volume.txt
-  �{�����[�������擾���܂��B
+・Get_Volume.txt
+  ボリューム情報を取得します。
 
-�EGet_ChildItem_<DriveLetter>_drive.txt
-  ���݂���h���C�u�̃f�B���N�g�������擾���܂��B
+・Get_ChildItem_<DriveLetter>_drive.txt
+  存在するドライブのディレクトリ情報を取得します。
 
-�EGet_ComputerInfo.txt
-  Get-ComputerInfo �R�}���h�̌��ʂ��擾���܂��B
+・Get_ComputerInfo.txt
+  Get-ComputerInfo コマンドの結果を取得します。
 
-�EGet_LocalGroup.txt
-�EGet_LocalUser.txt
-  ���[�J�����[�U�A���[�J���O���[�v�����擾���܂��B
+・Get_LocalGroup.txt
+・Get_LocalUser.txt
+  ローカルユーザ、ローカルグループ情報を取得します。
 
-�EGet_NetFirewallProfile.txt
-  �t�@�C�A�E�H�[���̐ݒ�����擾���܂��B
+・Get_NetFirewallProfile.txt
+  ファイアウォールの設定情報を取得します。
 
-�EGet_Service.txt
-  �T�[�r�X�ꗗ���擾���܂��B
+・Get_Service.txt
+  サービス一覧を取得します。
 
-�EGet_WindowsOptionalFeature.txt
-�EGet_WindowsFeature.txt
-  �N���C�A���gOS�ł����Get-WindowsOptionalFeature
-  �T�[�oOS�ł����Get-WindowsFeature�̌��ʂ��擾���܂��B
+・Get_WindowsOptionalFeature.txt
+・Get_WindowsFeature.txt
+  クライアントOSであればGet-WindowsOptionalFeature
+  サーバOSであればGet-WindowsFeatureの結果を取得します。
 
-�Egpresult.txt
-�Esecedit.log
-  �O���[�v�|���V�[�̌��ʃZ�b�g�A����уZ�L�����e�B�|���V�[���擾���܂��B
+・gpresult.txt
+・secedit.log
+  グループポリシーの結果セット、およびセキュリティポリシーを取得します。
 
-�Eipconfig.txt
-  ipconfig /all �̌��ʂ��擾���܂��B
+・ipconfig.txt
+  ipconfig /all の結果を取得します。
 
-�Eroute_print.txt
-  route print �̌��ʂ��擾���܂��B
+・route_print.txt
+  route print の結果を取得します。
 
-�EMemDump.txt
-  ���z�������̐ݒ�����擾���܂��B
+・MemDump.txt
+  仮想メモリの設定情報を取得します。
 
-�Ew32tm_query.txt
-�ERegistry_W32Time.txt
-  NTP�̐ݒ���Ǝ��s�󋵂��擾���܂��B
+・w32tm_query.txt
+・Registry_W32Time.txt
+  NTPの設定情報と実行状況を取得します。
 
 
 # Requiremnent
 
-OS �W����PowerShell�A����і����ǉ�����RSAT�ɕt����module���K�v�ł��B
-�������̏��擾�͌��o�[�W�����ł͖��Ή��ł�
-�E����m�F�ς�OS
+OS 標準のPowerShell、および役割追加時のRSATに付属のmoduleが必要です。
+※役割の情報取得は現バージョンでは未対応です
+・動作確認済みOS
 Windows 10 Pro
 Windows Server 2016
 Windows Server 2019
 
 # Usage
 
-Get-SysConfig�t�H���_���h���C�u
-run.bat���Ǘ��Ҍ����Ŏ��s���܂��B
-Get-SysConfig.ps1�����݂���t�H���_�̔z���ɁA<�R���s���[�^��>_<����>.zip��
-��������܂��B
-����������������R�}���h�v�����v�g���Enter�������ĕ��Ă��������B
+Get-SysConfigフォルダをドライブ
+run.batを管理者権限で実行します。
+Get-SysConfig.ps1が存在するフォルダの配下に、<コンピュータ名>_<日時>.zipが
+生成されます。
+生成が完了したらコマンドプロンプト上でEnterを押して閉じてください。
