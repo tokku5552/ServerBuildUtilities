@@ -7,6 +7,8 @@ Each tool is designed to work independently.
 For details, refer to the README of each tool.
 
 # Demo
+![Screenshot showing ServerBuildUtilites for Get-SysConfig.ps1](docs\images\GetSysconfigwin.png "Demo Get-SysConfig.ps1")  
+![Screenshot showing ServerBuildUtilites for WinFilenameReplacer.ps1](docs\images\WinFilenameReplacer.png "Demo WinFilenameReplacer.ps1")
 
 # Usage
 Basically it can be used without installation.  
