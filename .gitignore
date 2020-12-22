@@ -1,2 +1,3 @@
 Windows/Conf/_gitignoretest.conf
 VMware/Conf/Get-VMwareConfig.conf
+.vscode
