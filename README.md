@@ -20,6 +20,9 @@ The README of each tool describes the OS for which operation is being verified.
 # Install
 Simply download the zip file and unzip it to use it.
 
+# developement
+use Git-Flow
+
 # license
 Copyright (c) 2020 tokku5552  
 This software is released under the MIT License.  
